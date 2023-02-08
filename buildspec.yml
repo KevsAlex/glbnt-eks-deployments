@@ -4,27 +4,17 @@ phases:
   pre_build:
     commands:
       - echo Deploy to eks...
-      - $(aws ecr get-login --no-include-email)
       - export KUBECONFIG=$HOME/.kube/config
   build:
     commands:
       - echo Build started on `date`
       - echo Deploying to EKS k8s...
       - echo $KOTLIN_DMX_TEMPLATE_V2
-      #--------------------------
-      # ASUMING ROLE
-      #--------------------------
       - CREDENTIALS=$(aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 900)
       - export AWS_ACCESS_KEY_ID="$(echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId')"
       - export AWS_SECRET_ACCESS_KEY="$(echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey')"
       - export AWS_SESSION_TOKEN="$(echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken')"
       - export AWS_EXPIRATION=$(echo ${CREDENTIALS} | jq -r '.Credentials.Expiration')
-      # Additional Commands to view your credentials
-      - echo "Credentials Value is..  ${CREDENTIALS}"
-      - echo "AWS_ACCESS_KEY_ID...  ${AWS_ACCESS_KEY_ID}"
-      - echo "AWS_SECRET_ACCESS_KEY...  ${AWS_SECRET_ACCESS_KEY}"
-      - echo "AWS_SESSION_TOKEN...  ${AWS_SESSION_TOKEN}"
-      - echo "AWS_EXPIRATION...  $AWS_EXPIRATION"
       - echo "EKS_CLUSTER_NAME...  $EKS_CLkubectl get deployUSTER_NAME"
       - aws sts get-caller-identity
       - echo $EKS_CLUSTER_NAME
@@ -36,21 +26,9 @@ phases:
       #--------------------------
       # DEPLOY
       #--------------------------
-      - envsubst < users-deployment.yml | kubectl apply -f -
-      - envsubst < dmx-ms-config-server-service.yml | kubectl apply -f -
-      - envsubst < dmx-ms-config-server-deployment.yml | kubectl apply -f -
-      - envsubst < dmx-ms-security-service.yml | kubectl apply -f -
-      - envsubst < dmx-ms-security-deployment.yml | kubectl apply -f -
-      - envsubst < dmx-ms-onboarding-service.yml | kubectl apply -f -
-      - envsubst < dmx-ms-onboarding-deployment.yml | kubectl apply -f -
-      - envsubst < dmx-ms-communications-service.yml | kubectl apply -f -
-      - envsubst < dmx-ms-communications-deployment.yml | kubectl apply -f -
-      - envsubst < dmx-ms-commons-service.yml | kubectl apply -f -
-      - envsubst < dmx-ms-commons-deployment.yml | kubectl apply -f -
-      #- envsubst < dmx-ms-evaluation-service.yml | kubectl apply -f -
-      #- envsubst < dmx-ms-evaluation-deployment.yml | kubectl apply -f -
-      - kubectl get pods -n omnia-v2
-      - echo $KOTLIN_DMX_TEMPLATE_V2
+      - envsubst < mysql-deployment.yaml.yml | kubectl apply -n wordpress -f -
+      - kubectl get pods -n wordpress
+
 
   post_build:
     commands:
